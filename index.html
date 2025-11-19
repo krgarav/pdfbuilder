@@ -3,20 +3,84 @@
   <head>
     <meta charset="UTF-8" />
     <title>Hello World!</title>
+
+    <!-- INTERNAL CSS -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #f3f4f6;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+
+      .container {
+        background: #ffffff;
+        padding: 40px 50px;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        width: 380px;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      #fileInput {
+        margin-top: 18px;
+        margin-bottom: 20px;
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+      }
+
+      #uploadBtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #ffffff;
+        background: #0066ff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.25s ease;
+      }
+
+      #uploadBtn:hover {
+        background: #0053d1;
+        transform: translateY(-2px);
+      }
+
+      .icon {
+        font-size: 18px;
+      }
+    </style>
   </head>
+
   <body>
-  <h1>💖 Hello World!</h1>
-  <p>Welcome to your Electron application.</p>
+    <div class="container">
+      <h1>Upload Your File</h1>
 
+      <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" />
 
-  <br><br>
+      <button id="uploadBtn">
+        <span class="icon">📁</span>
+        Upload File
+      </button>
+    </div>
 
-  <!-- CSV/Excel upload -->
-  <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" />
-  <button id="uploadBtn">Upload File</button>
-
-  <script type="module" src="src/renderer.js"></script>
-</body>
-</html>
-
+    <script type="module" src="src/renderer.js"></script>
+  </body>
 </html>
