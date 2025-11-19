@@ -31,7 +31,7 @@ function createWindow() {
   // Vite dev or dist
   // if (process.env.NODE_ENV === "development") {
   win.loadFile("index.html");
-  // win.webContents.openDevTools();
+  win.webContents.openDevTools();
   // Menu.setApplicationMenu(null);
 }
 
@@ -142,14 +142,13 @@ ipcMain.handle("upload-file", async (event, file) => {
     }
 
     // Save TXT summary to folder
-    const saveTextPath = path.join(outputFolder, "certificates.txt");
+    // const saveTextPath = path.join(outputFolder, "certificates.txt");
 
-    fs.writeFileSync(saveTextPath, certificateTexts.join("\n"), "utf8");
+    // fs.writeFileSync(saveTextPath, certificateTexts.join("\n"), "utf8");
 
     return {
       status: "success",
       message: "Excel parsed, certificates generated, text file saved.",
-      savedPath: saveTextPath,
       data: parsedData,
     };
   }
@@ -380,7 +379,7 @@ async function generateCertificatePDF(studentObj, schoolName) {
 
   const { width, height } = page.getSize();
   const centerX = width / 2;
-  let y = height / 2 + 60;
+  let y = height / 2 + 60 - 40;
 
   // Main text
   page.drawText(mainText, {
