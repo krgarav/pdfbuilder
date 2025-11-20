@@ -390,29 +390,29 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
 
-  const timesRoman = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-  const timesBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-  const timesItalic = await pdfDoc.embedFont(
-    StandardFonts.TimesRomanBoldItalic
+  // const timesRoman = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  // const timesBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+  // const timesItalic = await pdfDoc.embedFont(
+  //   StandardFonts.TimesRomanBoldItalic
+  // );
+
+  const robotoRegularBytes = fs.readFileSync(
+    path.join(process.cwd(), "assets", "Roboto", "roboto-regular.ttf")
   );
 
-  // const robotoRegularBytes = fs.readFileSync(
-  //   path.join(process.cwd(), "assets", "Roboto", "roboto-regular.ttf")
-  // );
+  const robotoBoldBytes = fs.readFileSync(
+    path.join(process.cwd(), "assets", "Roboto", "roboto-bold.ttf")
+  );
 
-  // const robotoBoldBytes = fs.readFileSync(
-  //   path.join(process.cwd(), "assets", "Roboto", "roboto-bold.ttf")
-  // );
+  const robotoItalicBytes = fs.readFileSync(
+    path.join(process.cwd(), "assets", "Roboto", "roboto-boldItalic.ttf")
+  );
+  pdfDoc.registerFontkit(fontkit);
+  const timesRoman = await pdfDoc.embedFont(robotoRegularBytes);
+  const timesBold = await pdfDoc.embedFont(robotoBoldBytes);
+  const timesItalic = await pdfDoc.embedFont(robotoItalicBytes);
 
-  // const robotoItalicBytes = fs.readFileSync(
-  //   path.join(process.cwd(), "assets", "Roboto", "roboto-boldItalic.ttf")
-  // );
-  // pdfDoc.registerFontkit(fontkit);
-  // const timesRoman = await pdfDoc.embedFont(robotoRegularBytes);
-  // const timesBold = await pdfDoc.embedFont(robotoBoldBytes);
-  // const timesItalic = await pdfDoc.embedFont(robotoItalicBytes);
-
-  const fontSize = 18;
+  const fontSize = 16;
   const firstSub = subjectsArray.shift();
   // console.log(firstSub)
   const firstSubjectValue = `${firstSub.value}`;
@@ -422,7 +422,7 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
 
   const { width, height } = page.getSize();
   const centerX = width / 2;
-  let y = height / 2 + 60 - 10;
+  let y = height / 2 + 60 - 20;
 
   // Main text
   page.drawText(mainText, {
@@ -540,7 +540,87 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
   if (currentLine.length > 0) lines.push(currentLine);
 
   // Step 3: Draw each centered line
-  // Step 3: Draw each centered line
+  // lines.forEach((line, lineIndex) => {
+  //   const isLastLine = lineIndex === lines.length - 1;
+
+  //   // compute actual line width
+  //   let lineWidth = 0;
+  //   line.forEach((c) => (lineWidth += c.width + 30));
+  //   lineWidth -= 30;
+
+  //   let cursorX = centerX - lineWidth / 2;
+
+  //   line.forEach((chunk, index) => {
+  //     const { value, subject } = chunk;
+  //     const isLast = index === line.length - 1;
+  //     const isSecondLast = index === line.length - 2;
+
+  //     const widthValue = timesItalic.widthOfTextAtSize(value, fontSize);
+  //     const widthIn = timesRoman.widthOfTextAtSize(" in ", fontSize);
+  //     const widthSubject = timesRoman.widthOfTextAtSize(subject, fontSize);
+
+  //     // VALUE
+  //     page.drawText(value, {
+  //       x: cursorX,
+  //       y,
+  //       font: timesItalic,
+  //       size: fontSize,
+  //     });
+  //     cursorX += widthValue + 5;
+
+  //     // "in "
+  //     page.drawText("in ", {
+  //       x: cursorX,
+  //       y,
+  //       font: timesRoman,
+  //       size: fontSize,
+  //     });
+  //     cursorX += widthIn-5;
+
+  //     // SUBJECT
+  //     page.drawText(subject, {
+  //       x: cursorX,
+  //       y,
+  //       font: timesRoman,
+  //       size: fontSize,
+  //     });
+  //     cursorX += widthSubject + 5;
+
+  //     // --------- NEW LOGIC ---------
+  //     if (!isLast) {
+  //       if (isLastLine && isSecondLast) {
+  //         // ONLY the last line gets "and"
+  //         const widthAnd = timesRoman.widthOfTextAtSize(" and ", fontSize);
+  //         page.drawText(" and ", {
+  //           x: cursorX,
+  //           y,
+  //           font: timesRoman,
+  //           size: fontSize,
+  //         });
+  //         cursorX += widthAnd;
+  //       } else {
+  //         // All previous lines get commas
+  //         const widthComma = timesRoman.widthOfTextAtSize(", ", fontSize);
+  //         page.drawText(", ", {
+  //           x: cursorX,
+  //           y,
+  //           font: timesRoman,
+  //           size: fontSize,
+  //         });
+  //         cursorX += widthComma;
+  //       }
+  //     }
+  //   });
+
+  //   y -= lineSpacing;
+  // });
+
+  const newLines = [];
+  for (let i = 0; i < chunks.length; i += 2) {
+    newLines.push(chunks.slice(i, i + 2));
+  }
+
+  lines = newLines; // overwrite original lines
   lines.forEach((line, lineIndex) => {
     const isLastLine = lineIndex === lines.length - 1;
 
@@ -576,7 +656,7 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
         font: timesRoman,
         size: fontSize,
       });
-      cursorX += widthIn;
+      cursorX += widthIn - 5;
 
       // SUBJECT
       page.drawText(subject, {
@@ -587,29 +667,21 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
       });
       cursorX += widthSubject + 5;
 
-      // --------- NEW LOGIC ---------
+      // only apply comma/and inside SAME line
       if (!isLast) {
+        let text = ", ";
         if (isLastLine && isSecondLast) {
-          // ONLY the last line gets "and"
-          const widthAnd = timesRoman.widthOfTextAtSize(" and ", fontSize);
-          page.drawText(" and ", {
-            x: cursorX,
-            y,
-            font: timesRoman,
-            size: fontSize,
-          });
-          cursorX += widthAnd;
-        } else {
-          // All previous lines get commas
-          const widthComma = timesRoman.widthOfTextAtSize(", ", fontSize);
-          page.drawText(", ", {
-            x: cursorX,
-            y,
-            font: timesRoman,
-            size: fontSize,
-          });
-          cursorX += widthComma;
+          text = " and ";
         }
+
+        const widthText = timesRoman.widthOfTextAtSize(text, fontSize);
+        page.drawText(text, {
+          x: cursorX,
+          y,
+          font: timesRoman,
+          size: fontSize,
+        });
+        cursorX += widthText;
       }
     });
 
