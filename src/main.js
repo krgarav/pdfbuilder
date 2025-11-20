@@ -12,7 +12,7 @@ const os = require("os");
 const Papa = require("papaparse");
 const XLSX = require("xlsx");
 const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
-
+const fontkit = require("fontkit");
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
 });
@@ -396,7 +396,23 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
     StandardFonts.TimesRomanBoldItalic
   );
 
-  const fontSize = 20;
+  // const robotoRegularBytes = fs.readFileSync(
+  //   path.join(process.cwd(), "assets", "Roboto", "roboto-regular.ttf")
+  // );
+
+  // const robotoBoldBytes = fs.readFileSync(
+  //   path.join(process.cwd(), "assets", "Roboto", "roboto-bold.ttf")
+  // );
+
+  // const robotoItalicBytes = fs.readFileSync(
+  //   path.join(process.cwd(), "assets", "Roboto", "roboto-boldItalic.ttf")
+  // );
+  // pdfDoc.registerFontkit(fontkit);
+  // const timesRoman = await pdfDoc.embedFont(robotoRegularBytes);
+  // const timesBold = await pdfDoc.embedFont(robotoBoldBytes);
+  // const timesItalic = await pdfDoc.embedFont(robotoItalicBytes);
+
+  const fontSize = 18;
   const firstSub = subjectsArray.shift();
   // console.log(firstSub)
   const firstSubjectValue = `${firstSub.value}`;
@@ -406,7 +422,7 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
 
   const { width, height } = page.getSize();
   const centerX = width / 2;
-  let y = height / 2 + 60 - 40;
+  let y = height / 2 + 60 - 10;
 
   // Main text
   page.drawText(mainText, {
@@ -451,7 +467,7 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
   const subjectWidth = timesRoman.widthOfTextAtSize(firstSubjectName, fontSize);
 
   // Total width of the entire line
-  const totalWidth = midWidth  + valueWidth + inWidth + subjectWidth;
+  const totalWidth = midWidth + valueWidth + inWidth + subjectWidth;
 
   // Starting X (centered)
   let positionX = centerX - totalWidth / 2;
@@ -462,7 +478,7 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
     font: timesRoman,
     size: fontSize,
   });
-  positionX += midWidth + 10; // spacing after mid text
+  positionX += midWidth + 6; // spacing after mid text
 
   // Draw the first subject value (italic)
   page.drawText(firstSubjectValue, {
@@ -471,7 +487,7 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
     font: timesItalic,
     size: fontSize,
   });
-  positionX += valueWidth;
+  positionX += valueWidth + 4;
 
   // Draw " in "
   page.drawText(" in ", {
@@ -599,17 +615,6 @@ async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
 
     y -= lineSpacing;
   });
-
-  // -----------------------------
-  // SAVE TO DOCUMENTS FOLDER
-  // -----------------------------
-  // const documentsFolder = app.getPath("documents");
-  // const outputFolder = path.join(documentsFolder, "DOCUMENTED PDF");
-
-  // // Create folder if it doesn't exist
-  // if (!fs.existsSync(outputFolder)) {
-  //   fs.mkdirSync(outputFolder, { recursive: true });
-  // }
 
   const pdfBytes = await pdfDoc.save();
   const savePath = path.join(outputFolder, `${studentName}.pdf`);
