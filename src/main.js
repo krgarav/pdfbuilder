@@ -31,8 +31,8 @@ function createWindow() {
   // Vite dev or dist
   // if (process.env.NODE_ENV === "development") {
   win.loadFile("index.html");
-  win.webContents.openDevTools();
-  // Menu.setApplicationMenu(null);
+  // win.webContents.openDevTools();
+  Menu.setApplicationMenu(null);
 }
 
 // Start Electron app
@@ -62,14 +62,10 @@ ipcMain.handle("select-folder", async () => {
 });
 
 ipcMain.handle("upload-file", async (event, file) => {
-  console.log("📁 File received in Main:");
-  console.log("Name:", file.name);
-
   const buffer = Buffer.from(file.data);
   const extension = file.name.split(".").pop().toLowerCase();
 
   let parsedData = null;
-
   // -------------------------------
   // 📌 1. CSV → JSON
   // -------------------------------
@@ -97,20 +93,47 @@ ipcMain.handle("upload-file", async (event, file) => {
     // --------------------------
     // Folder where PDFs and TXT are saved
     // --------------------------
-    const outputFolder = path.join(__dirname, "pdfdocumented");
+    const documentsFolder = app.getPath("documents");
+
+    const schoolName = parsedData[0]["School"] || "Unknown School";
+
+    // DOCUMENTS/DOCUMENTED PDF/<School Name>
+    const outputFolder = path.join(
+      documentsFolder,
+      "DOCUMENTED PDF",
+      schoolName
+    );
 
     // Create folder if it doesn't exist
     if (!fs.existsSync(outputFolder)) {
       fs.mkdirSync(outputFolder, { recursive: true });
     }
-
     const certificateTexts = [];
-
+    const subjectMap = {
+      "MM Result": "Mental Maths",
+      "D&C Result": "Drawing & Colouring",
+      "HW Result": "Handwriting",
+      "GK Result": "General Knowledge",
+    };
     if (parsedData.length > 0) {
-      const schoolName = parsedData[0]["School"] || "Unknown School";
+      for (let i = 0; i < parsedData.length; i++) {
+        const row = parsedData[i];
+
+        for (let oldKey in row) {
+          if (subjectMap[oldKey]) {
+            const newKey = subjectMap[oldKey];
+
+            // copy value
+            row[newKey] = row[oldKey];
+
+            // delete old key
+            delete row[oldKey];
+          }
+        }
+      }
+
       for (let i = 0; i < parsedData.length; i++) {
         const student = parsedData[i];
-        // const schoolName = student["School"] || "Unknown School";
 
         const subjects = [
           "Handwriting",
@@ -163,12 +186,12 @@ ipcMain.handle("upload-file", async (event, file) => {
     };
   }
 
-  console.log("Parsed object:", parsedData);
+  // console.log("Parsed object:", parsedData);
 
   return {
     status: "success",
     message: "File parsed successfully",
-    data: parsedData, // <<< your JavaScript object
+    // data: parsedData, // <<< your JavaScript object
   };
 });
 
@@ -350,9 +373,10 @@ const validSubjects = [
   "Mental Maths",
 ];
 
-async function generateCertificatePDF(studentObj, schoolName) {
-  const studentName = studentObj.Name;
+async function generateCertificatePDF(studentObj, schoolName, outputFolder) {
+  const studentName = studentObj.Name.toUpperCase();
 
+  schoolName = schoolName.toUpperCase();
   // Extract available subjects
   const subjectsArray = validSubjects
     .filter((s) => studentObj[s] && studentObj[s].trim() !== "")
@@ -373,7 +397,10 @@ async function generateCertificatePDF(studentObj, schoolName) {
   );
 
   const fontSize = 20;
-
+  const firstSub = subjectsArray.shift();
+  // console.log(firstSub)
+  const firstSubjectValue = `${firstSub.value}`;
+  const firstSubjectName = `${firstSub.subject}`;
   const mainText = "This is to certify that";
   const midText = `has achieved excellence as`;
 
@@ -418,8 +445,46 @@ async function generateCertificatePDF(studentObj, schoolName) {
 
   // Mid text
   y -= 30;
+  const midWidth = timesRoman.widthOfTextAtSize(midText, fontSize);
+  const valueWidth = timesItalic.widthOfTextAtSize(firstSubjectValue, fontSize);
+  const inWidth = timesRoman.widthOfTextAtSize(" in ", fontSize);
+  const subjectWidth = timesRoman.widthOfTextAtSize(firstSubjectName, fontSize);
+
+  // Total width of the entire line
+  const totalWidth = midWidth  + valueWidth + inWidth + subjectWidth;
+
+  // Starting X (centered)
+  let positionX = centerX - totalWidth / 2;
+  // Draw mid text
   page.drawText(midText, {
-    x: centerX - timesRoman.widthOfTextAtSize(midText, fontSize) / 2,
+    x: positionX,
+    y,
+    font: timesRoman,
+    size: fontSize,
+  });
+  positionX += midWidth + 10; // spacing after mid text
+
+  // Draw the first subject value (italic)
+  page.drawText(firstSubjectValue, {
+    x: positionX,
+    y,
+    font: timesItalic,
+    size: fontSize,
+  });
+  positionX += valueWidth;
+
+  // Draw " in "
+  page.drawText(" in ", {
+    x: positionX,
+    y,
+    font: timesRoman,
+    size: fontSize,
+  });
+  positionX += inWidth;
+
+  // Draw subject name
+  page.drawText(firstSubjectName, {
+    x: positionX,
     y,
     font: timesRoman,
     size: fontSize,
@@ -538,13 +603,13 @@ async function generateCertificatePDF(studentObj, schoolName) {
   // -----------------------------
   // SAVE TO DOCUMENTS FOLDER
   // -----------------------------
-  const documentsFolder = app.getPath("documents");
-  const outputFolder = path.join(documentsFolder, "DOCUMENTED PDF");
+  // const documentsFolder = app.getPath("documents");
+  // const outputFolder = path.join(documentsFolder, "DOCUMENTED PDF");
 
-  // Create folder if it doesn't exist
-  if (!fs.existsSync(outputFolder)) {
-    fs.mkdirSync(outputFolder, { recursive: true });
-  }
+  // // Create folder if it doesn't exist
+  // if (!fs.existsSync(outputFolder)) {
+  //   fs.mkdirSync(outputFolder, { recursive: true });
+  // }
 
   const pdfBytes = await pdfDoc.save();
   const savePath = path.join(outputFolder, `${studentName}.pdf`);

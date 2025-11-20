@@ -27,7 +27,7 @@
     "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron-forge/plugin-vite": "^7.10.2",
     "@electron/fuses": "^1.8.0",
-    "electron": "39.2.1",
+    "electron": "^22.3.3",
     "vite": "^5.4.21"
   },
   "dependencies": {
@@ -37,5 +37,24 @@
     "papaparse": "^5.5.3",
     "pdf-lib": "^1.17.1",
     "xlsx": "^0.18.5"
+  },
+  "build": {
+    "productName": "CSV To PDF",
+    "icon": "assets/icon.ico",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ],
+      "asar": true
+    },
+    "defaultArch": "ia32",
+    "directories": {
+      "output": "dist"
+    }
   }
 }
